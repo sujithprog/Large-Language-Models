@@ -1,0 +1,62 @@
+import streamlit as st
+import openai
+from langchain_core.messages.human import HumanMessage
+
+def main():
+    # Initialize LangChain model and API credentials
+
+    OPENAI_API_KEY = "Your_OpenAI_API_Key_Here"
+
+    model = openai(
+        model_name='gpt-3.5-turbo',
+        openai_api_key=OPENAI_API_KEY,
+       
+    )
+
+    # Function to process user input and generate entity extraction response
+    def process_user_input(user_input):
+        Desc_Text = user_input
+        prompt = f"""
+            Your task is to extract key entities from the provided college data text:
+            
+            Identify and extract the following key entities:
+            - College Name
+            - College ID: This is same as Student ID
+            - Branch or Department
+            - Course Name
+            - Semester
+            - Student Name
+            - Student ID
+            - Grade
+            
+            Format the output as a table with entity type as the column and values comma-separated under the named entity column.
+            For each response, remove any unnecessary words and ensure clarity.
+            
+            Generate the response only based on the Desc_Text provided below:
+            
+            Desc_Text: '{Desc_Text}'
+            
+            Do not print Desc_Text.
+        """
+
+        message = HumanMessage(
+            content=prompt
+        )
+        response = model([message])
+        st.text("GenAI Response:")
+        response_text = response.content.replace('Output:\n\n', '')
+        st.markdown(response_text, unsafe_allow_html=True)
+
+    # UI components
+    st.title('College Data Entity Extraction')
+    user_input = st.text_area("Enter College Data Text", height=250)
+
+    # Button to trigger response generation
+    if st.button("Generate Entity Extraction"):
+        process_user_input(user_input)
+
+if __name__ == "__main__":
+    main()
+
+
+#At XYZ University, known for its cutting-edge programs, the Computer Science department stands out for its rigorous academic offerings. In the Fall 2023 semester, students like John Doe, identified by his student ID 98765, immerse themselves in courses like Introduction to Data Science. This course, part of the branch's comprehensive curriculum, explores foundational concepts in data analysis and machine learning. John's exceptional performance, reflected in his grade of A, underscores his commitment to mastering these advanced topics. Such academic achievements highlight the university's commitment to fostering excellence and innovation in the realm of technology and computer science education
