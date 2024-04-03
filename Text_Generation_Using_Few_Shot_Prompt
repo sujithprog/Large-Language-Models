@@ -1,0 +1,63 @@
+import streamlit as st
+from langchain.prompts.few_shot import FewShotPromptTemplate
+from langchain.prompts.prompt import PromptTemplate
+from langchain.chains import LLMChain
+import openai
+def main():
+    examples = [
+        {
+            "input": '''College ID: 123456
+                        Branch (single select): Computer Science
+                        Description:  Missing grades in core courses leading to academic concern
+                        Detected System (single select):  Academic Portal
+                        Impacted Process (multi select): Student Evaluation, Course Enrollment
+                        Impact Value: 2%''',
+            "output": '''The Data Concern with College ID 123456 has been detected due to missing grades in core courses in the Computer Science branch, leading to academic concerns. It affects the accuracy and completeness of student records in the Academic Portal system. It impacts processes like Student Evaluation and Course Enrollment, resulting in a 2% drop in GPA.'''
+        }
+    ]
+    example_prompt = PromptTemplate(template="Input: {input}\nOutput: {output}", input_variables=["input", "output"])
+
+    few_shot_prompt = FewShotPromptTemplate(
+        examples=examples,
+        example_prompt=example_prompt,
+        suffix="Input : {input}",
+        input_variables=["input"]
+    )
+
+    OPENAI_API_KEY = "Your_OpenAI_API_Key_Here"
+
+    llm = openai(
+        model_name='gpt-3.5-turbo',
+        temperature=0.1,
+        openai_api_key=OPENAI_API_KEY,
+    )
+
+    chain = LLMChain(llm=llm, prompt=few_shot_prompt)
+    st.set_page_config(layout="wide")
+    st.title('Data Concern Prompt Generator')
+    with st.form('context_form'):
+        st.header('Enter Data Concern Context:')
+        college_id = st.text_input('College ID:')
+        branch = st.selectbox('Branch:', ['Computer Science', 'Electrical Engineering', 'Mathematics', 'Business Administration'])
+        description = st.text_area('Description:')
+        detected_system = st.selectbox('Detected System:', ['Academic Portal', 'ERP System', 'Student Database'], index=None)
+        impacted_process = st.multiselect('Impacted Processes:',
+                                          ['Student Evaluation', 'Course Enrollment', 'Grading System', 'Degree Audit'])
+        impact_value = st.text_input('Impact Value (% GPA drop):')
+        submit_button = st.form_submit_button(label='Generate Prompt')
+
+        if submit_button:
+            input_text = f'''
+                College ID: {college_id}
+                Branch (single select): {branch}
+                Description: {description}
+                Detected System (single select): {detected_system}
+                Impacted Process (multi select): {', '.join(impacted_process)}
+                Impact Value: {impact_value}
+            '''
+            chain_response = chain.run(input_text)
+            st.header('Generated Prompt:')
+            st.text_area('Prompt', value=chain_response, height=300)
+
+if __name__ == "__main__":
+    main()
